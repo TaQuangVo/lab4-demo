@@ -1,23 +1,22 @@
 package kth.se.lab4demo.view;
 
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import kth.se.lab4demo.controll.FileController;
-import kth.se.lab4demo.controll.RightBtnController;
-import kth.se.lab4demo.controll.LeftBtnController;
-import kth.se.lab4demo.controll.MainBoardController;
+import kth.se.lab4demo.controll.*;
+import kth.se.lab4demo.model.Model;
 
 
 public class View {
@@ -68,9 +67,18 @@ public class View {
         return instance;
     }
 
+
     private void initView(){
         this.primaryStage = new Stage();
         this.primaryStage.setTitle("Suduku");
+        this.primaryStage.setOnCloseRequest(windowEvent -> {
+            Model model = Model.getInstance();
+            if(model.isSaved())
+                primaryStage.close();
+            else{
+                showSavedRequest();
+            }
+        });
 
         BorderPane borderPane = new BorderPane();
 
@@ -85,9 +93,9 @@ public class View {
         MenuBar menuBar = createMenybar();
         borderPane.setTop(menuBar);
 
-
         Scene root = new Scene(borderPane);
         primaryStage.setScene(root);
+        primaryStage.show();
     }
 
     //kth.se.lab4demo.view
@@ -108,7 +116,38 @@ public class View {
                    numberTiles[y][x].setFont(Font.font("Monospaced", FontWeight.SEMI_BOLD, 20));
             }
         }
-        primaryStage.show();
+    }
+
+    public void showSavedRequest(){
+        Text text = new Text("Do you want to save?");
+        text.setTextAlignment(TextAlignment.CENTER);
+        HBox textBox = new HBox(text);
+
+
+        Button exitButton = new Button("EXIT");
+        exitButton.setOnAction(new SavedRequestBtnHandler(primaryStage,"EXIT"));
+
+        Button saveButton = new Button("SAVE");
+        saveButton.setOnAction(new SavedRequestBtnHandler(primaryStage,"SAVE"));
+
+        HBox btnBox = new HBox();
+        btnBox.setSpacing(30);
+        btnBox.getChildren().add(exitButton);
+        btnBox.getChildren().add(saveButton);
+        btnBox.setAlignment(Pos.CENTER);
+        VBox vbox = new VBox();
+        vbox.getChildren().addAll(textBox, btnBox);
+        vbox.setSpacing(30);
+        vbox.setPadding(new Insets(30));
+        vbox.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(vbox);
+
+        Stage stage = new Stage();
+        stage.setAlwaysOnTop(true);
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.showAndWait();
     }
 
     private MenuBar createMenybar(){
@@ -200,7 +239,7 @@ public class View {
     }
 
     // called by constructor (only)
-    private final void initNumberTiles() {
+    private void initNumberTiles() {
 
 
         for (int row = 0; row < GRID_SIZE; row++) {
@@ -211,15 +250,7 @@ public class View {
                 tile.setAlignment(Pos.CENTER);
                 tile.setStyle("-fx-border-color: black; -fx-border-width: 0.5px;"); // css style
 
-                final int x = col;
-                final int y = row;
-                EventHandler handler = new EventHandler() {
-                    @Override
-                    public void handle(Event event) {
-                        System.out.println(x+ ":"+y);
-                    }
-                };
-                tile.setOnMouseClicked(new MainBoardController(x,y)); // add your custom event handler
+                tile.setOnMouseClicked(new MainBoardController(col, row)); // add your custom event handler
 
                 // add new tile to grid
                 numberTiles[row][col] = tile;
@@ -227,7 +258,7 @@ public class View {
         }
     }
 
-    private final VBox createNumberPane() {
+    private VBox createNumberPane() {
         // create the root tile pane
         TilePane root = new TilePane();
         root.setPrefColumns(SECTIONS_PER_ROW);
@@ -235,8 +266,6 @@ public class View {
         root.setStyle("-fx-border-color: black; -fx-border-width: 1.0px; -fx-background-color: white;");
 
         // create the 3*3 sections and add the number tiles
-        TilePane[][] sections = new TilePane[SECTIONS_PER_ROW][SECTIONS_PER_ROW];
-        int i = 0;
         for (int srow = 0; srow < SECTIONS_PER_ROW; srow++) {
             for (int scol = 0; scol < SECTIONS_PER_ROW; scol++) {
                 TilePane section = new TilePane();

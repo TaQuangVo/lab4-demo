@@ -10,14 +10,14 @@ import java.util.Random;
 public class Model implements Serializable {
     private static Model instance = null;
     private int [][][] stage;// [y][x][0]: originalen;  [y][x][1]: lösninigen; [y][x][2]: currentStage
-
+    private boolean isSaved = false;
     private Model(){
         this.initNewGamge(SudokuLevel.EASY);
     }
 
     public int[][][] getStage() {
         int GRID_SIZE = SudokuUtilities.GRID_SIZE;
-        int temp[][][] = new int[GRID_SIZE][GRID_SIZE][2];
+        int[][][] temp = new int[GRID_SIZE][GRID_SIZE][2];
         for (int y = 0; y < GRID_SIZE; y++) {
             for(int x = 0; x < GRID_SIZE; x++){
                 temp[y][x][0] = stage[y][x][0];
@@ -31,6 +31,7 @@ public class Model implements Serializable {
         Model loadedModel = FileUtils.loadGame();
         assert loadedModel != null;
         this.stage = loadedModel.stage;
+        this.isSaved = true;
 
         View view = View.getInstance();
         view.view(this.getStage());
@@ -38,12 +39,15 @@ public class Model implements Serializable {
 
     public void saveGame(){
         FileUtils.saveGameModel(this);
+        isSaved=true;
     }
 
     public void changeStage(int x, int y, int val){
-        if (stage[y][x][0] == 0)
-            this.stage[y][x][2] = val;
-
+        if (stage[y][x][0] != 0){
+            return;
+        }
+        this.stage[y][x][2] = val;
+        isSaved=false;
         View view = View.getInstance();
         view.view(this.getStage());
     }
@@ -53,6 +57,7 @@ public class Model implements Serializable {
 
         int GRID_SIZE = SudokuUtilities.GRID_SIZE;
         stage = new int[GRID_SIZE][GRID_SIZE][3];
+        isSaved = false;
 
         for (int y = 0; y < GRID_SIZE; y++) {
             for(int x = 0; x < GRID_SIZE; x++){
@@ -73,6 +78,10 @@ public class Model implements Serializable {
             }
         }
         return true;
+    }
+
+    public boolean isSaved() {
+        return isSaved;
     }
 
     public void hint() {
