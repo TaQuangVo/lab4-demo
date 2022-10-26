@@ -4,9 +4,10 @@ package kth.se.lab4demo.model;
 import kth.se.lab4demo.dataTypes.SudokuLevel;
 import kth.se.lab4demo.view.View;
 
+import java.io.Serializable;
 import java.util.Random;
 
-public class Model {
+public class Model implements Serializable {
     private static Model instance = null;
     private int [][][] stage;// [y][x][0]: originalen;  [y][x][1]: lösninigen; [y][x][2]: currentStage
 
@@ -24,6 +25,19 @@ public class Model {
             }
         }
         return temp;
+    }
+
+    public void loadGame(){
+        Model loadedModel = FileUtils.loadGame();
+        assert loadedModel != null;
+        this.stage = loadedModel.stage;
+
+        View view = View.getInstance();
+        view.view(this.getStage());
+    }
+
+    public void saveGame(){
+        FileUtils.saveGameModel(this);
     }
 
     public void changeStage(int x, int y, int val){

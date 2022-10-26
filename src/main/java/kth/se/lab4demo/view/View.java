@@ -14,6 +14,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import kth.se.lab4demo.controll.FileController;
 import kth.se.lab4demo.controll.RightBtnController;
 import kth.se.lab4demo.controll.LeftBtnController;
 import kth.se.lab4demo.controll.MainBoardController;
@@ -115,9 +116,16 @@ public class View {
 
         //File
         final Menu filesMeny = new Menu("Files");
+
         MenuItem loadGameItem = new MenuItem("Load game");
+        loadGameItem.setOnAction(new FileController("LOAD_GAME"));
+
         MenuItem saveGameItem = new MenuItem("Save game");
+        saveGameItem.setOnAction(new FileController("SAVE_GAME"));
+
         MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setOnAction(new FileController("EXIT_GAME"));
+
         filesMeny.getItems().addAll(loadGameItem, saveGameItem, exitItem);
 
         //game
