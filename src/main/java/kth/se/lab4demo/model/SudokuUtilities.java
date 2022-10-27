@@ -4,7 +4,7 @@ import kth.se.lab4demo.dataTypes.SudokuLevel;
 
 import java.util.Random;
 
-public class SudokuUtilities {
+class SudokuUtilities {
 
     public static final int GRID_SIZE = 9;
     public static final int SECTIONS_PER_ROW = 3;
