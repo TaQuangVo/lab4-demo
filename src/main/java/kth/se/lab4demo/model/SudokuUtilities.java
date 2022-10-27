@@ -2,6 +2,8 @@ package kth.se.lab4demo.model;
 
 import kth.se.lab4demo.dataTypes.SudokuLevel;
 
+import java.util.Random;
+
 public class SudokuUtilities {
 
     public static final int GRID_SIZE = 9;
@@ -20,13 +22,11 @@ public class SudokuUtilities {
      *                                  for characters other than '0'-'9'.
      */
     public static int[][][] generateSudokuMatrix(SudokuLevel level) {
-        String representationString;
-        switch (level) {
-            case EASY: representationString = easy; break;
-            case MEDIUM: representationString = medium; break;
-            case HARD: representationString = hard; break;
-            default: representationString = medium;
-        }
+        String representationString = switch (level) {
+            case EASY -> easy;
+            case MEDIUM -> medium;
+            case HARD -> hard;
+        };
         return convertStringToIntMatrix(representationString);
     }
     /**
@@ -69,6 +69,63 @@ public class SudokuUtilities {
             }
         }
         return values;
+    }
+    public static int[][][] turnStage(int[][][] stage){
+        int [][][] tmp = new int[9][9][9];
+        for (int y = 0; y < 9; y++ ){
+            for (int x = 0; x < 9; x++){
+                tmp[8-x][y] = stage[y][x];
+            }
+        }
+            return tmp;
+    }
+    public static int[][][] vFlipStage(int[][][] stage){
+        int [][][] tmp = new int[9][9][9];
+        for (int y = 0; y < 9; y++ ){
+            for (int x = 0; x < 9; x++){
+                tmp[y][x] = stage[8-y][x];
+            }
+        }
+        return tmp;
+    }
+    public static int[][][] hFlipStage(int[][][] stage){
+        int [][][] tmp = new int[9][9][9];
+        for (int y = 0; y < 9; y++ ){
+            for (int x = 0; x < 9; x++){
+                tmp[8-y][x] = stage[y][x];
+            }
+        }
+        return tmp;
+    }
+    public static int[][][] switchStage(int[][][] stage){
+        Random r = new Random();
+        int f = r.nextInt(8)+1;
+        int t = r.nextInt(8)+1;
+
+        for (int y = 0; y < 9; y++ ){
+            for (int x = 0; x < 9; x++){
+                if(stage[y][x][1] == f){
+                    stage[y][x][1] = t;
+                    int org = stage[y][x][0];
+                    if(org == f){
+                        stage[y][x][2] = t;
+                        stage[y][x][0] = t;
+                    }
+                    continue;
+                }
+                if(stage[y][x][1] == t){
+                    stage[y][x][1] = f;
+                    int org = stage[y][x][0];
+                    if(org == t){
+                        stage[y][x][2] = f;
+                        stage[y][x][0] = f;
+                    }
+                }
+
+
+            }
+        }
+        return stage;
     }
     private static int convertCharToSudokuInt(char ch) {
         if (ch < '0' || ch > '9') throw new IllegalArgumentException("character " +

@@ -1,5 +1,6 @@
 package kth.se.lab4demo.view;
 
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,16 +17,13 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kth.se.lab4demo.controll.*;
-import kth.se.lab4demo.model.Model;
 
 
 public class View {
     private static View instance = null;
-    private int currentActiveBtn = 0;
     private static final int GRID_SIZE = 9;
     private static final int SECTIONS_PER_ROW = 3;
     private static final int SECTION_SIZE = 3;
-
     private final Label[][] numberTiles; // the tiles/squares to show in the ui grid
     private final VBox numberPane;
     private Stage primaryStage;
@@ -37,48 +35,16 @@ public class View {
         initView();
     }
 
-    public int getCurrentActiveBtn(){
-        return this.currentActiveBtn;
-    }
-    public void setCurrentActiveBtn(int currentIndex){
-        this.currentActiveBtn = currentIndex;
-
-        Scene scene = primaryStage.getScene();
-        BorderPane b = (BorderPane) scene.getRoot();
-        VBox vBox =  (VBox) b.getRight();
-
-        for (int i = 0; i < 10; i++) {
-            Button button = (Button) vBox.getChildren().get(i);
-            if (this.currentActiveBtn == i){
-                button.setStyle("-fx-background-color: #0000ff;");
-                button.setTextFill(Paint.valueOf("ffffff"));
-                System.out.println(i);
-            }
-            else{
-                button.setStyle(null);
-                button.setTextFill(Paint.valueOf("000000"));
-            }
-        }
-    }
-
     public static View getInstance(){
         if(instance == null)
             instance = new View();
         return instance;
     }
 
-
     private void initView(){
         this.primaryStage = new Stage();
         this.primaryStage.setTitle("Suduku");
-        this.primaryStage.setOnCloseRequest(windowEvent -> {
-            Model model = Model.getInstance();
-            if(model.isSaved())
-                primaryStage.close();
-            else{
-                showSavedRequest();
-            }
-        });
+        this.primaryStage.setOnCloseRequest(new WindowCloseRequestHandler());
 
         BorderPane borderPane = new BorderPane();
 
@@ -90,7 +56,7 @@ public class View {
         VBox rightPanel = createRightPanel();
         borderPane.setRight(rightPanel);
 
-        MenuBar menuBar = createMenybar();
+        MenuBar menuBar = createMenyBar();
         borderPane.setTop(menuBar);
 
         Scene root = new Scene(borderPane);
@@ -98,42 +64,60 @@ public class View {
         primaryStage.show();
     }
 
-    //kth.se.lab4demo.view
     public void view(int [][][] stage){
 
         for (int y = 0; y < GRID_SIZE; y++) {
             for (int x = 0; x < GRID_SIZE; x++) {
-               if(stage[y][x][1] == 0){
-                   numberTiles[y][x].setText("");
-               }else{
-                   String value = String.valueOf(stage[y][x][1]);
-                   numberTiles[y][x].setText(value);
-               }
+                if(stage[y][x][1] == 0){
+                    numberTiles[y][x].setText("");
+                }else{
+                    String value = String.valueOf(stage[y][x][1]);
+                    numberTiles[y][x].setText(value);
+                }
 
-               if(stage[y][x][0] != 0)
+                if(stage[y][x][0] != 0)
                     numberTiles[y][x].setFont(Font.font("Monospaced", FontWeight.BOLD, 20));
-               else
-                   numberTiles[y][x].setFont(Font.font("Monospaced", FontWeight.SEMI_BOLD, 20));
+                else
+                    numberTiles[y][x].setFont(Font.font("Monospaced", FontWeight.SEMI_BOLD, 20));
             }
         }
     }
 
-    public void showSavedRequest(){
-        Text text = new Text("Do you want to save?");
+    public void updateActiveBtn(int currentIndex){
+        Scene scene = primaryStage.getScene();
+        BorderPane b = (BorderPane) scene.getRoot();
+        VBox vBox =  (VBox) b.getRight();
+
+        for (int i = 0; i < 10; i++) {
+            Button button = (Button) vBox.getChildren().get(i);
+            if (currentIndex == i){
+                button.setStyle("-fx-background-color: #0000ff;");
+                button.setTextFill(Paint.valueOf("ffffff"));
+                System.out.println(i);
+            }
+            else{
+                button.setStyle(null);
+                button.setTextFill(Paint.valueOf("000000"));
+            }
+        }
+    }
+
+    public void showSavedRequestStage(String nextAction){
+        Text text = new Text("Current work is not saved yet\nDo you want to save before continues?");
         text.setTextAlignment(TextAlignment.CENTER);
         HBox textBox = new HBox(text);
 
 
-        Button exitButton = new Button("EXIT");
-        exitButton.setOnAction(new SavedRequestBtnHandler(primaryStage,"EXIT"));
 
-        Button saveButton = new Button("SAVE");
-        saveButton.setOnAction(new SavedRequestBtnHandler(primaryStage,"SAVE"));
+        Button nextButton = new Button(nextAction);
+        nextButton.setOnAction(new SavedRequestBtnHandler(nextAction.toUpperCase()));
+
+        Button saveButton = new Button("Save");
+        saveButton.setOnAction(new SavedRequestBtnHandler("SAVE"));
 
         HBox btnBox = new HBox();
         btnBox.setSpacing(30);
-        btnBox.getChildren().add(exitButton);
-        btnBox.getChildren().add(saveButton);
+        btnBox.getChildren().addAll(saveButton ,nextButton);
         btnBox.setAlignment(Pos.CENTER);
         VBox vbox = new VBox();
         vbox.getChildren().addAll(textBox, btnBox);
@@ -150,36 +134,82 @@ public class View {
         stage.showAndWait();
     }
 
-    private MenuBar createMenybar(){
+    public void showResultStage(boolean isCorrect) {
+        String msg = "Uncorrect";
+        if (isCorrect) {
+            msg = "Correct";
+        }
+        Text text = new Text(msg);
+        VBox vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER);
+        vbox.setSpacing(20);
+        vbox.setPadding(new Insets(20));
+
+        HBox hbox = new HBox();
+        hbox.setAlignment(Pos.CENTER);
+        hbox.setSpacing(20);
+        if(isCorrect){
+            Button newGameBtn = new Button("New Game");
+            newGameBtn.setOnAction(new ResultBtnController("NEW_GAME"));
+            hbox.getChildren().add(newGameBtn);
+            Button exitBtn = new Button("Exit Game");
+            exitBtn.setOnAction(new ResultBtnController("EXIT_GAME"));
+            hbox.getChildren().add(exitBtn);
+        }else{
+            Button clearBtn = new Button("Clear All");
+            clearBtn.setOnAction(new ResultBtnController("CLEAR_ALL"));
+            hbox.getChildren().add(clearBtn);
+            Button continueBtn = new Button("Continue");
+            continueBtn.setOnAction(new ResultBtnController("CONTINUE"));
+            hbox.getChildren().add(continueBtn);
+        }
+
+        vbox.getChildren().addAll(text,hbox);
+
+        Scene scene = new Scene(vbox);
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.showAndWait();
+    }
+
+    private MenuBar createMenyBar(){
         MenuBar menuBar = new MenuBar();
 
-        //File
-        final Menu filesMeny = new Menu("Files");
-
+        //file
         MenuItem loadGameItem = new MenuItem("Load game");
-        loadGameItem.setOnAction(new FileController("LOAD_GAME"));
-
         MenuItem saveGameItem = new MenuItem("Save game");
-        saveGameItem.setOnAction(new FileController("SAVE_GAME"));
-
         MenuItem exitItem = new MenuItem("Exit");
+
+        saveGameItem.setOnAction(new FileController("SAVE_GAME"));
+        loadGameItem.setOnAction(new FileController("LOAD_GAME"));
         exitItem.setOnAction(new FileController("EXIT_GAME"));
 
+        Menu filesMeny = new Menu("Files");
         filesMeny.getItems().addAll(loadGameItem, saveGameItem, exitItem);
 
         //game
-        final Menu gameMeny = new Menu("Game");
-        Menu newGameSubItem = new Menu("New game");
         MenuItem easyGameSubItem = new MenuItem("Easy");
+        easyGameSubItem.setOnAction(new NewGameBtnController("NEW_EASY_GAME"));
         MenuItem mediumGameSubItem = new MenuItem("Medium");
+        mediumGameSubItem.setOnAction(new NewGameBtnController("NEW_MEDIUM_GAME"));
         MenuItem hardGameSubItem = new MenuItem("Hard");
+        hardGameSubItem.setOnAction(new NewGameBtnController("NEW_HARD_GAME"));
+
+        Menu newGameSubItem = new Menu("New game");
         newGameSubItem.getItems().addAll(easyGameSubItem,mediumGameSubItem, hardGameSubItem);
+
+        Menu gameMeny = new Menu("Game");
         gameMeny.getItems().add(newGameSubItem);
 
-        final Menu helpMeny = new Menu("Help");
+        Menu helpMeny = new Menu("Help");
+        MenuItem clearAllItem = new MenuItem("Clear all");
+        clearAllItem.setOnAction(new HelpController("CLEAR_ALL"));
+
         MenuItem ruleItem = new MenuItem("Rule");
-        MenuItem howItem = new MenuItem("How to play");
-        helpMeny.getItems().addAll(ruleItem,howItem);
+        ruleItem.setOnAction(new HelpController("RULE"));
+
+        helpMeny.getItems().addAll(ruleItem,clearAllItem);
 
         menuBar.getMenus().addAll(filesMeny, gameMeny,helpMeny );
         return menuBar;
@@ -196,26 +226,8 @@ public class View {
         leftPanel.setSpacing(15);
         leftPanel.setPadding(new Insets(10));
         hintBtn.setOnAction(new LeftBtnController("Hint"));
+
         return leftPanel;
-    }
-
-    public void viewCheckResult(boolean isCorrect) {
-        String msg = "Uncorrect";
-        if (isCorrect) {
-            msg = "Correct";
-        }
-
-
-        Text text = new Text(msg);
-        VBox vbox = new VBox(text);
-        vbox.setAlignment(Pos.CENTER);
-
-        Scene scene = new Scene(vbox);
-        Stage stage = new Stage();
-        stage.setHeight(200);
-        stage.setWidth(300);
-        stage.setScene(scene);
-        stage.show();
     }
 
     private VBox createRightPanel (){
@@ -240,11 +252,9 @@ public class View {
 
     // called by constructor (only)
     private void initNumberTiles() {
-
-
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                Label tile = new Label(/* add number, or "", to display */); // data from kth.se.lab4demo.model
+                Label tile = new Label(/* add number, or "", to display */);
                 tile.setPrefWidth(32);
                 tile.setPrefHeight(32);
                 tile.setAlignment(Pos.CENTER);
@@ -291,5 +301,28 @@ public class View {
         rootWrap.setPadding(new Insets(7,0,7,0));
 
         return rootWrap;
+    }
+
+    public void showPopup(String s){
+        Stage popupStage = new Stage();
+
+        Text text = new Text(s);
+        text.setTextAlignment(TextAlignment.CENTER);
+        HBox textBox = new HBox(text);
+
+        Button btn = new Button("Close");
+        btn.setOnAction((e)-> popupStage.close());
+
+        VBox vBox = new VBox();
+        vBox.setPadding(new Insets(30));
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(20);
+        vBox.getChildren().addAll(textBox, btn);
+
+        Scene scene = new Scene(vBox);
+        popupStage.setAlwaysOnTop(true);
+        popupStage.setScene(scene);
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.showAndWait();
     }
 }

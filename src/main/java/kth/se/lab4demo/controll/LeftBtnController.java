@@ -7,7 +7,7 @@ import kth.se.lab4demo.view.View;
 
 public class LeftBtnController implements EventHandler<ActionEvent> {
 
-    private String btnType;
+    private final String btnType;
 
     public LeftBtnController(String btnType) {
         this.btnType = btnType;
@@ -18,15 +18,10 @@ public class LeftBtnController implements EventHandler<ActionEvent> {
     @Override
     public void handle(ActionEvent actionEvent) {
         Model model = Model.getInstance();
-        View view = View.getInstance();
 
-        if (btnType=="Hint"){
-            if(model.checkGameState())
-                view.viewCheckResult(true);
-            model.hint();
-        }else if(btnType == "Check"){
-            boolean isCorrect = model.checkGameState();
-            view.viewCheckResult(isCorrect);
+        switch (btnType) {
+            case "Hint" -> model.hint();
+            case "Check" -> model.checkGameState();
         }
     }
 }
