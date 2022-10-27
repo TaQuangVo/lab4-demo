@@ -18,11 +18,14 @@ class FileUtils{
         }
     }
     public static void saveGameModel(Model model){
+        //create a file chooser
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Same Game");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TXT files (*.txt)","*.txt"));
         Stage fileChooserStage = new Stage();
+        //show the save dialog
         File file = fileChooser.showSaveDialog(fileChooserStage);
+
         if(file != null){
             FileUtils.saveModelToFile(model, file);
         }

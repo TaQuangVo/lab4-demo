@@ -1,11 +1,11 @@
 /**
- *
+ *View object refect model class,
+ * When model change it will call the cooresponding functions to update view;
  */
 
 
 package kth.se.lab4demo.view;
 
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -33,6 +33,9 @@ public class View {
     private final VBox numberPane;
     private Stage primaryStage;
 
+    /**
+     * Private contructor initialise view all the interactions
+     */
     private View() {
         numberTiles = new Label[GRID_SIZE][GRID_SIZE];
         initNumberTiles();
@@ -40,12 +43,19 @@ public class View {
         initView();
     }
 
+    /**
+     * create and return one single instance of View
+     * @return return the same instance of view
+     */
     public static View getInstance(){
         if(instance == null)
             instance = new View();
         return instance;
     }
 
+    /**
+     * the call of corresponding functions to init view
+     */
     private void initView(){
         this.primaryStage = new Stage();
         this.primaryStage.setTitle("Suduku");
@@ -69,10 +79,14 @@ public class View {
         primaryStage.show();
     }
 
-    public void view(int [][][] stage){
-
+    /**
+     * A main function to update the view
+     * @param stage 3D array, stage[][][0] original, stage[][][1] currentstage
+     */
+    public void updateView(int [][][] stage){
         for (int y = 0; y < GRID_SIZE; y++) {
             for (int x = 0; x < GRID_SIZE; x++) {
+                //update the number tiles
                 if(stage[y][x][1] == 0){
                     numberTiles[y][x].setText("");
                 }else{
@@ -80,6 +94,7 @@ public class View {
                     numberTiles[y][x].setText(value);
                 }
 
+                //The tile that can not be changed, will be represent as bolder font
                 if(stage[y][x][0] != 0)
                     numberTiles[y][x].setFont(Font.font("Monospaced", FontWeight.BOLD, 20));
                 else
@@ -88,11 +103,19 @@ public class View {
         }
     }
 
+    /**
+     *Take an index to show the current active button and change the color to blue
+     * Take the index of the current active button and style it blue to indicate that it's active
+     * @param currentIndex index of the active button
+     *
+     */
     public void updateActiveBtn(int currentIndex){
+        //get instance of the VBox that contain all the button to the right
         Scene scene = primaryStage.getScene();
         BorderPane b = (BorderPane) scene.getRoot();
         VBox vBox =  (VBox) b.getRight();
 
+        //loop throw all the buttons and compare its index to the currentindex if it equals make it blue else make it white
         for (int i = 0; i < 10; i++) {
             Button button = (Button) vBox.getChildren().get(i);
             if (currentIndex == i){
@@ -107,12 +130,14 @@ public class View {
         }
     }
 
+    /**
+     * prompt user to save game.
+     * @param nextAction the next action after saved.
+     */
     public void showSavedRequestStage(String nextAction){
         Text text = new Text("Current work is not saved yet\nDo you want to save before continues?");
         text.setTextAlignment(TextAlignment.CENTER);
         HBox textBox = new HBox(text);
-
-
 
         Button nextButton = new Button(nextAction);
         nextButton.setOnAction(new SavedRequestBtnHandler(nextAction.toUpperCase()));
@@ -139,6 +164,10 @@ public class View {
         stage.showAndWait();
     }
 
+    /**
+     * show a message if currentstage is correct or not
+     * @param isCorrect true if correct, false if not correct
+     */
     public void showResultStage(boolean isCorrect) {
         String msg = "Uncorrect";
         if (isCorrect) {
@@ -178,9 +207,14 @@ public class View {
         stage.showAndWait();
     }
 
+    /**
+     * creates menubar
+     * @return menubar
+     */
     private MenuBar createMenyBar(){
         MenuBar menuBar = new MenuBar();
 
+        //Menubar -> Menu -> MenuItem -> MenuItem
         //file
         MenuItem loadGameItem = new MenuItem("Load game");
         MenuItem saveGameItem = new MenuItem("Save game");
@@ -195,10 +229,11 @@ public class View {
 
         //game
         MenuItem easyGameSubItem = new MenuItem("Easy");
-        easyGameSubItem.setOnAction(new NewGameBtnController("NEW_EASY_GAME"));
         MenuItem mediumGameSubItem = new MenuItem("Medium");
-        mediumGameSubItem.setOnAction(new NewGameBtnController("NEW_MEDIUM_GAME"));
         MenuItem hardGameSubItem = new MenuItem("Hard");
+
+        mediumGameSubItem.setOnAction(new NewGameBtnController("NEW_MEDIUM_GAME"));
+        easyGameSubItem.setOnAction(new NewGameBtnController("NEW_EASY_GAME"));
         hardGameSubItem.setOnAction(new NewGameBtnController("NEW_HARD_GAME"));
 
         Menu newGameSubItem = new Menu("New game");
@@ -207,6 +242,7 @@ public class View {
         Menu gameMeny = new Menu("Game");
         gameMeny.getItems().add(newGameSubItem);
 
+        //help
         Menu helpMeny = new Menu("Help");
         MenuItem clearAllItem = new MenuItem("Clear all");
         clearAllItem.setOnAction(new HelpController("CLEAR_ALL"));
@@ -220,6 +256,10 @@ public class View {
         return menuBar;
     }
 
+    /**
+     * create lefthandside panel including buttons
+     * @return Vbox with buttons inside
+     */
     private VBox createLeftPanel (){
         VBox leftPanel = new VBox();
 
@@ -235,6 +275,10 @@ public class View {
         return leftPanel;
     }
 
+    /**
+     * creates righthandside panel including buttons 1-C
+     * @return vBox with buttons
+     */
     private VBox createRightPanel (){
         VBox rightPanel = new VBox();
 
@@ -243,23 +287,25 @@ public class View {
         rightPanel.setSpacing(2);
         rightPanel.setPadding(new Insets(10));
 
+        //create all buttons to the right side 1-C
         for (int i = 0; i < 10; i++) {
             String titel = i < 9 ? String.valueOf(i+1) : "C";
             Button btn = new Button(titel);
             rightPanel.getChildren().add(btn);
 
-            RightBtnController controller = new RightBtnController(i);
-            btn.setOnAction(controller);
+            btn.setOnAction(new RightBtnController(i));
         }
 
         return rightPanel;
     }
 
-    // called by constructor (only)
+    /**
+     *initials all number tiles as empty
+     */
     private void initNumberTiles() {
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                Label tile = new Label(/* add number, or "", to display */);
+                Label tile = new Label();
                 tile.setPrefWidth(32);
                 tile.setPrefHeight(32);
                 tile.setAlignment(Pos.CENTER);
@@ -273,6 +319,10 @@ public class View {
         }
     }
 
+    /**
+     * create number pane, include 3x3 sections each section include 3x3 labels.
+     * @return VBox with all labels
+     */
     private VBox createNumberPane() {
         // create the root tile pane
         TilePane root = new TilePane();
@@ -308,6 +358,10 @@ public class View {
         return rootWrap;
     }
 
+    /**
+     * show a popup with one button to close
+     * @param s Content of the popup
+     */
     public void showPopup(String s){
         Stage popupStage = new Stage();
 
